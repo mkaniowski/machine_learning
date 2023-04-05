@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from sklearn import svm
+import os
 
 from process_email import process_email
 from email_features import email_features
@@ -16,7 +17,9 @@ def read_file(file_path: str) -> str:
     """
 
     # FIXME: Implement.
-    raise NotImplementedError()
+
+    with open(os.path.join(os.path.dirname(__file__), file_path), 'r') as f:
+        return f.read()
 
 
 # %% ==================== Part 1: Email Preprocessing ====================
@@ -25,7 +28,6 @@ def read_file(file_path: str) -> str:
 #  implement the preprocessing steps for each email. You should
 #  complete the code in process_email.py to produce a word indices vector
 #  for a given email.
-
 print('\nPreprocessing sample email (emailSample1.txt)\n')
 
 file_contents = read_file('data/emailSample1.txt')
@@ -39,7 +41,7 @@ print('\n\n')
 # input('Program paused. Press enter to continue.\n')
 
 # %% ==================== Part 2: Feature Extraction ====================
-#  Now, you will convert each email into a vector of features in R^n. 
+#  Now, you will convert each email into a vector of features in R^n.
 #  You should complete the code in email_features.py to produce a feature
 #  vector for a given email.
 
@@ -51,8 +53,8 @@ word_indices = process_email(file_contents)
 features = email_features(word_indices)
 
 # Print Stats
-print('Length of feature vector: {}\n'.format(len(features[0])))
-print('Number of non-zero entries: {}\n'.format(sum(sum(features > 0))))
+print('Length of feature vector: {}\n'.format(len(features)))
+print('Number of non-zero entries: {}\n'.format(sum(features) > 0))
 
 # input('Program paused. Press enter to continue.\n')
 
@@ -64,40 +66,48 @@ print('Number of non-zero entries: {}\n'.format(sum(sum(features > 0))))
 # You will have X, y in your environment
 
 print('\nLoading the training dataset...')
-X_train = np.genfromtxt('data/spamTrain_X.csv', delimiter=',')
-y_train = np.genfromtxt('data/spamTrain_y.csv', delimiter=',')
+X_train = np.genfromtxt(os.path.join(os.path.dirname(
+    __file__), 'data/spamTrain_X.csv'), delimiter=',')
+y_train = np.genfromtxt(os.path.join(os.path.dirname(
+    __file__), 'data/spamTrain_y.csv'), delimiter=',')
 print('The training dataset was loaded.')
 
 print('\nTraining Linear SVM (Spam Classification)\n')
 print('(this may take 1 to 2 minutes) ...\n')
 
-# FIXME: Create a linear SVC classifier (with C = 0.1).
-clf = None
+# Create a linear SVC classifier (with C = 0.1).
+clf = svm.SVC(C=0.1, kernel='linear', random_state=73)
 
-# FIXME: Fit the SVC model using the training data.
+# Fit the SVC model using the training data.
+clf.fit(X_train, y_train)
 
-# FIXME: Predict the labelling.
-y_pred = None
+# Predict the labelling.
+y_pred = clf.predict(X_train)
 
-# FIXME: Compute the training accuracy.
-acc_train = None
+# Compute the training accuracy.
+acc_train = clf.score(X_train, y_pred)
 print('Training Accuracy: {:.2f}%\n'.format(acc_train * 100))
 
 # %% =================== Part 4: Test Spam Classification ================
 #  After training the classifier, we can evaluate it on a test set.
 
-# FIXME: Load the test dataset ('data/spamTest_X.csv', 'data/spamTest_y.csv').
+# Load the test dataset ('data/spamTest_X.csv', 'data/spamTest_y.csv').
 # You will have Xtest, ytest in your environment
-X_test = None
-y_test = None
+print('\nLoading the test dataset...')
+X_test = np.genfromtxt(os.path.join(os.path.dirname(
+    __file__), 'data/spamTest_X.csv'), delimiter=',')
+y_test = np.genfromtxt(os.path.join(os.path.dirname(
+    __file__), 'data/spamTest_y.csv'), delimiter=',')
+print('The test dataset was loaded.')
+
 
 print('\nEvaluating the trained Linear SVM on a test set ...\n')
 
-# FIXME: Predict the labelling.
-y_pred = None
+# Predict the labelling.
+y_pred = clf.predict(X_test)
 
-# FIXME: Compute the training accuracy.
-acc_test = None
+# Compute the training accuracy.
+acc_test = clf.score(X_test, y_test)
 print('Test Accuracy: {:.2f}%\n'.format(acc_test * 100))
 
 # input('Program paused. Press enter to continue.\n')
@@ -116,7 +126,7 @@ print('Test Accuracy: {:.2f}%\n'.format(acc_test * 100))
 # - Obtain the indices that would sort the weights in the descending order.
 # - Obtain the vocabulary.
 
-weights = None
+weights = clf.coef_
 idx = None
 
 vocabulary_dict = None
@@ -133,9 +143,9 @@ print('\n\n')
 # %% =================== Part 6: Try Your Own Emails =====================
 #  Now that you've trained the spam classifier, you can use it on your own
 #  emails! In the starter code, we have included spamSample1.txt,
-#  spamSample2.txt, emailSample1.txt and emailSample2.txt as examples. 
-#  The following code reads in one of these emails and then uses your 
-#  learned SVM classifier to determine whether the email is Spam or 
+#  spamSample2.txt, emailSample1.txt and emailSample2.txt as examples.
+#  The following code reads in one of these emails and then uses your
+#  learned SVM classifier to determine whether the email is Spam or
 #  Not Spam
 
 # Set the file to be read in (change this to spamSample2.txt,
@@ -150,5 +160,6 @@ x = email_features(word_indices)
 # FIXME: Predict the labelling.
 y_pred = None
 
-print('\nProcessed {}\n\nSpam Classification: {}\n'.format(filename, y_pred[0] > 0))
+print('\nProcessed {}\n\nSpam Classification: {}\n'.format(
+    filename, y_pred[0] > 0))
 print('(1 indicates spam, 0 indicates not spam)\n\n')
